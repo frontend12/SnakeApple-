@@ -4,6 +4,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 
@@ -25,6 +27,8 @@ public class GameField extends JPanel implements ActionListener{
     private boolean down = false;
     private boolean inGame = true;
 
+    private final Snake snake=new Snake(List.of());
+
 
     public GameField(){
         setBackground(Color.black);
@@ -37,18 +41,35 @@ public class GameField extends JPanel implements ActionListener{
 
     public void initGame(){
         dots = 3;
+        List<Coordinate> initialCoordinates=new ArrayList<>();
         for (int i = 0; i < dots; i++) {
             x[i] = 48 - i*DOT_SIZE;
             y[i] = 48;
+            Coordinate coordinate = new Coordinate(x[i], y[i]);
+            initialCoordinates.add(coordinate);
         }
+        snake.setCoordinates(initialCoordinates);
+
         timer = new Timer(250,this);
         timer.start();
         createApple();
     }
 
     public void createApple(){
-        appleX = new Random().nextInt(20)*DOT_SIZE;
-        appleY = new Random().nextInt(20)*DOT_SIZE;
+
+        int valueOfX = new Random().nextInt(20)*DOT_SIZE;
+        int valueOfY = new Random().nextInt(20)*DOT_SIZE;
+        Coordinate result=new Coordinate(valueOfX,valueOfY);
+
+        while (snake.getCoordinates().contains(result)){
+            result.setX(new Random().nextInt(20)*DOT_SIZE);
+            result.setY(new Random().nextInt(20)*DOT_SIZE);
+        }
+
+        System.out.println(appleX+" "+appleY);
+        appleX=valueOfX;
+        appleY=valueOfY;
+
     }
 
     public void loadImages(){
@@ -70,15 +91,17 @@ public class GameField extends JPanel implements ActionListener{
             String str = "Game Over";
             //Font f = new Font("Arial",14,Font.BOLD);
             g.setColor(Color.white);
-           // g.setFont(f);
+            // g.setFont(f);
             g.drawString(str,125,SIZE/2);
         }
     }
 
     public void move(){
+        List<Coordinate> coordinates=new ArrayList<>();
         for (int i = dots; i > 0; i--) {
             x[i] = x[i-1];
             y[i] = y[i-1];
+            coordinates.add(new Coordinate(x[i],y[i]));
         }
         if(left){
             x[0] -= DOT_SIZE;
@@ -90,7 +113,14 @@ public class GameField extends JPanel implements ActionListener{
         } if(down){
             y[0] += DOT_SIZE;
         }
+
+        coordinates.add(new Coordinate(x[0],y[0]));
+
+        snake.setCoordinates(coordinates);
+
     }
+
+
 
     public void checkApple(){
         if(x[0] == appleX && y[0] == appleY){
