@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -22,6 +23,7 @@ public class GameField extends JPanel implements ActionListener{
     private int dots;
     private Timer timer;
     private Direction direction = Direction.RIGHT;
+    private final ArrayDeque<Direction> directionsQueue = new ArrayDeque<>();
     private boolean inGame = true;
 
     private final Snake snake=new Snake(List.of());
@@ -100,6 +102,10 @@ public class GameField extends JPanel implements ActionListener{
             y[i] = y[i-1];
             coordinates.add(new Coordinate(x[i],y[i]));
         }
+        // get next direction from queue
+        if (!directionsQueue.isEmpty()) {
+            direction = directionsQueue.poll();
+        }
         switch (direction) {
             case LEFT:
                 x[0] -= DOT_SIZE;
@@ -166,26 +172,32 @@ public class GameField extends JPanel implements ActionListener{
         @Override
         public void keyPressed(KeyEvent e) {
             super.keyPressed(e);
+            // we don't want to save too many directions,
+            // otherwise game may feel uncontrollable
+            if (directionsQueue.size() > 2) {
+                return;
+            }
+            Direction lastDirection = directionsQueue.isEmpty() ? direction : directionsQueue.getLast();
             int key = e.getKeyCode();
             switch (key) {
                 case KeyEvent.VK_LEFT:
-                    if (direction.canChangeDirectionTo(Direction.LEFT)) {
-                        direction = Direction.LEFT;
+                    if (lastDirection.canChangeDirectionTo(Direction.LEFT)) {
+                        directionsQueue.add(Direction.LEFT);
                     }
                     break;
                 case KeyEvent.VK_UP:
-                    if (direction.canChangeDirectionTo(Direction.UP)) {
-                        direction = Direction.UP;
+                    if (lastDirection.canChangeDirectionTo(Direction.UP)) {
+                        directionsQueue.add(Direction.UP);
                     }
                     break;
                 case KeyEvent.VK_RIGHT:
-                    if (direction.canChangeDirectionTo(Direction.RIGHT)) {
-                        direction = Direction.RIGHT;
+                    if (lastDirection.canChangeDirectionTo(Direction.RIGHT)) {
+                        directionsQueue.add(Direction.RIGHT);
                     }
                     break;
                 case KeyEvent.VK_DOWN:
-                    if (direction.canChangeDirectionTo(Direction.DOWN)) {
-                        direction = Direction.DOWN;
+                    if (lastDirection.canChangeDirectionTo(Direction.DOWN)) {
+                        directionsQueue.add(Direction.DOWN);
                     }
                     break;
             }
